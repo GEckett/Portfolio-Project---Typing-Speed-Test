@@ -13,7 +13,7 @@ class TypeSpeedTestApp:
         self.start_time = None
         self.type_speed = 0
         self.phrases = phrases
-        self.finish_phrase = False
+        self.paused = False
 
         # App appearance
         self.root = root
@@ -46,6 +46,7 @@ class TypeSpeedTestApp:
         self.reset_timer()
         self.title_label.config(text="Start test to get your Typing Speed.")
         self.phrase_label.config(text="Phrase to type appears here.")
+        self.test_entry.delete(0, tk.END)
 
     def test(self):
         self.title_label.config(text="")
@@ -56,19 +57,22 @@ class TypeSpeedTestApp:
         self.phrase_label.config(text=random.choice(self.phrases))
 
     def update_timer_label(self):
-        if not self.finish_phrase:
+        if not self.paused:
             elapsed_time = time.time() - self.start_time
             self.stopwatch = elapsed_time
             self.test_text.config(text=f"Timer: {self.stopwatch:.2f} seconds")
+            self.toggle_pause()
             self.root.update()
 
             # Schedule the next update after 100 milliseconds (adjust as needed)
             self.root.after(100, self.update_timer_label)
         else:
-            print("Timer stopped.")
+            print("Timer paused.")
+            self.calculate_type_speed()
 
     def start_timer(self):
         self.start_time = time.time()
+        self.paused = False
 
         # Start the automatic timer update
         self.update_timer_label()
@@ -79,8 +83,28 @@ class TypeSpeedTestApp:
         self.stopwatch = 0
         self.test_text.config(text="Timer: 0.00 seconds")
 
+    def toggle_pause(self):
+        # Toggle the pause state if the label and entry texts match
+        label_text = self.phrase_label.cget("text")
+        entry_text = self.test_entry.get()
+
+        if label_text == entry_text:
+            self.paused = not self.paused
+            if self.paused:
+                print("Timer paused.")
+            else:
+                print("Timer resumed.")
+                # Restart the timer update if unpaused
+                self.update_timer_label()
+        else:
+            pass
+
     def calculate_type_speed(self):
-        pass
+        phrase_chars = len(self.test_phrase)
+        time_to_type = self.stopwatch
+        chars_per_sec = phrase_chars/time_to_type
+        self.type_speed = round(chars_per_sec * 60)
+        self.title_label.config(text=f"Your typing speed is {self.type_speed} characters per minute.")
 
 
 if __name__ == "__main__":
